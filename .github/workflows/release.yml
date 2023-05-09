@@ -9,6 +9,8 @@ on:
 jobs:
     build:
         runs-on: ubuntu-latest
+        permissions:
+            contents: write
         steps:
             - uses: actions/checkout@v3
 
@@ -40,5 +42,3 @@ jobs:
                   allowUpdates: true
                   makeLatest: true
                   artifacts: "crawlarr"
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
