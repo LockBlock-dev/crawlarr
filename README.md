@@ -1,6 +1,6 @@
 # Crawlarr
 
-[![GitHub stars](https://img.shields.io/github/stars/LockBlock-dev/Crawlarr.svg)](https://github.com/LockBlock-dev/Crawlarr/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/LockBlock-dev/crawlarr.svg)](https://github.com/LockBlock-dev/crawlarr/stargazers)
 
 Crawlarr is a web crawler built using the Go programming language. This tool allows users to input a base URL, and it will search through the HTML code to locate all anchor tags (`<a>`) on the page. Crawlarr will then follow these links and repeat the process, searching through each subsequent page for more anchor tags until either the end of the website or a user-defined maximum depth is reached. This tool leverages concurrency to significantly increase its speed.
 
@@ -25,7 +25,7 @@ See the [changelog](/CHANGELOG.md) for the latest updates.
 
 ## Compiling from source
 
--   Use [`build.sh`](/build.sh) or use `go build` in [`src`](/src)
+-   Use [`build.sh`](/build.sh) or use `go build` in [`cmd/crawlarr/`](/cmd/crawlarr/)
 
 ## Usage
 
@@ -33,7 +33,7 @@ See the [changelog](/CHANGELOG.md) for the latest updates.
     -   Run `chmod +x crawlarr`.
     -   Start the tool with `./crawlarr`
 -   Running from source:
-    -   Start the tool with `go run src/main.go` or `cd src && go run .`
+    -   Start the tool with `go run ./cmd/crawlarr/main.go` or `cd ./cmd/crawlarr/ && go run .`
 
 Find the results in `links.txt`.
 

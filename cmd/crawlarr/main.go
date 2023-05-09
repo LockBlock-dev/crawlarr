@@ -146,7 +146,7 @@ func processLink(current string, depth int, config *Config, re *regexp.Regexp) {
 func main() {
 	configFile, err := os.Open("./config.json")
     if err != nil {
-        configFile, err = os.Open("../config.json")
+        configFile, err = os.Open("../../config.json")
 		if err != nil {
 			panic(fmt.Errorf("cannot find/open config.json file: %w", err))
 		}
