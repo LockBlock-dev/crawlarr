@@ -40,3 +40,4 @@ jobs:
                   allowUpdates: true
                   makeLatest: true
                   artifacts: "crawlarr"
+                  token: ${{ secrets.GITHUB_TOKEN }}
