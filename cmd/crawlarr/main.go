@@ -26,15 +26,38 @@ var (
 	processed = map[string]bool{}
     mutex = &sync.Mutex{}
 	wg sync.WaitGroup
+	// Create a channel that emits a value every config.Delay
+	rate <-chan time.Time
 )
 
-func addLink(link string, delay int) {
+func addLink(link string) {
     mutex.Lock()
-	time.Sleep(time.Duration(delay) * time.Millisecond)
     defer mutex.Unlock()
     if _, ok := links[link]; !ok {
         links[link] = true
     }
+}
+
+func checkLink(link string) bool {
+	mutex.Lock()
+	defer mutex.Unlock()
+	_, ok := links[link]
+	return ok
+}
+
+func addProcessed(link string) {
+    mutex.Lock()
+    defer mutex.Unlock()
+    if _, ok := processed[link]; !ok {
+        processed[link] = true
+    }
+}
+
+func checkProcessed(link string) bool {
+	mutex.Lock()
+	defer mutex.Unlock()
+	_, ok := processed[link]
+	return ok
 }
 
 func processBody(body []byte, currentUrl string, matchType string, re *regexp.Regexp, baseUrl *url.URL) []string {
@@ -66,11 +89,33 @@ func processBody(body []byte, currentUrl string, matchType string, re *regexp.Re
 				continue
 			}
 		case "SAME_HOST":
-			if (u.Host != baseUrl.Host) {
+			if (u.Hostname() != baseUrl.Hostname()) {
 				continue
 			}
+		case "SAME_ORIGIN":
+			uOrigin := u.Hostname()
+			baseOrigin := baseUrl.Hostname()
+
+			uParts := strings.Split(u.Host, ".")
+			if len(uParts) > 2 {
+				uOrigin = strings.Join(uParts[1:], ".")
+			}
+
+			baseParts := strings.Split(baseUrl.Host, ".")
+			if len(baseParts) > 2 {
+				baseOrigin = strings.Join(baseParts[1:], ".")
+			}
+
+			if (uOrigin != baseOrigin) {
+				continue
+			}
+
 		case "DANGEROUS_NO_MATCH_TYPE_ONLY_ENABLE_IF_YOU_KNOW_WHAT_YOURE_DOING":
 			// no filtering, can go wrong
+		default:
+			if !strings.HasPrefix(u.String(), baseUrl.String()) {
+				continue
+			}
 		}
 
         // Remove any fragment or query parameters from URL
@@ -95,6 +140,10 @@ func processLink(current string, depth int, config *Config, re *regexp.Regexp) {
 		fmt.Println(fmt.Errorf("cannot unescape current URL: %w", err))
 		return
 	}
+	
+	if (depth > 0) {
+		<-rate // Wait for the rate limit
+	}
 
 	resp, err := http.Get(current)
 	if err != nil {
@@ -116,10 +165,10 @@ func processLink(current string, depth int, config *Config, re *regexp.Regexp) {
 	}
 
 	hits := []string{}
-	if _, ok := processed[current]; !ok {
+	if ok := checkProcessed(current); !ok {
 		hits = processBody(body, current, config.MatchType, re, base)
 
-		processed[current] = true
+		addProcessed(current)
 
 		if (config.Debug) {
 			fmt.Printf("Found %d new links on %s\nCurrent depth: %d\n", len(hits), current, depth)
@@ -132,9 +181,9 @@ func processLink(current string, depth int, config *Config, re *regexp.Regexp) {
 	}
 
 	for _, hit := range hits {
-		_, ok := links[hit]
+		ok := checkLink(hit)
 		if (!ok && depth < config.DepthLimit) {
-			addLink(hit, config.Delay)
+			addLink(hit)
 
 			wg.Add(1) // increment WaitGroup counter
 
@@ -164,6 +213,8 @@ func main() {
 		config.BaseUrl = config.BaseUrl + "/"
 	}
 
+	rate = time.Tick(time.Duration(config.Delay) * time.Millisecond)
+
 	re := regexp.MustCompile(`<a[\w\s="]*href\s*=\s*(?:\"|')([^\"';]*)(?:\"|')`)
 
 	fmt.Println("Crawlarr started!")
@@ -175,7 +226,7 @@ func main() {
 	wg.Wait() // wait for all goroutines to complete
 
 	// 0644 = rw-,r--,r--
-	f, err := os.OpenFile("links.txt", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	f, err := os.OpenFile("links_test.txt", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		panic(fmt.Errorf("cannot open links.txt: %w", err))
 	} else {

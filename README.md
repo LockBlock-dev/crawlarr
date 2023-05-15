@@ -63,6 +63,7 @@ The config can be found at the root of the project.
     baseUrl: "http://example.com/this-page/"
     + valid match : http://example.com/this-page/random-page/
     - discarded match : http://example.com/another-page/
+    - discarded match : http://test.example.com/
     - discarded match : http://random.site/a-third-page/
     ```
 
@@ -73,6 +74,18 @@ The config can be found at the root of the project.
     baseUrl: "http://example.com/this-page/"
     + valid match : http://example.com/this-page/random-page/
     + valid match : http://example.com/another-page/
+    - discarded match : http://test.example.com/
+    - discarded match : http://random.site/another-page/
+    ```
+
+-   `SAME_ORIGIN`:  
+    Match the same origin, e.g:
+
+    ```diff
+    baseUrl: "http://example.com/this-page/"
+    + valid match : http://example.com/this-page/random-page/
+    + valid match : http://example.com/another-page/
+    + valid match : http://test.example.com/
     - discarded match : http://random.site/another-page/
     ```
 
@@ -82,6 +95,7 @@ The config can be found at the root of the project.
     baseUrl: "http://example.com/this-page/"
     + valid match : http://example.com/this-page/random-page/
     + valid match : http://example.com/another-page/
+    + valid match : http://test.example.com/
     + valid match : http://random.site/another-page/
     ```
 
